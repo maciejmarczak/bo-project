@@ -8,11 +8,11 @@ from utils import Counter
 
 
 PATH = './sudoku.txt'
-MAX_ITERATIONS = 1000
-SITES_TO_VISIT = 100
-SITES_TO_SELECT = 40
-BEES = 1000
-SCOUT_BEES = SITES_TO_VISIT - SITES_TO_SELECT
+MAX_ITERATIONS = 100000
+ONLOOKER_BEES = 300
+EMPLOYED_BEES = 100
+SCOUT_BEES = EMPLOYED_BEES // 5
+FERTILITY = 30
 
 
 counter = Counter()
@@ -49,7 +49,8 @@ def random_search(start_board, sites_to_search, solutions):
     for _ in range(sites_to_search):
         sol = deepcopy(start_board)
         fill(sol)
-        heapq.heappush(solutions, (calc_fitness(sol), counter.next(), sol))
+        heapq.heappush(solutions, (calc_fitness(sol), counter.next(),
+                                   FERTILITY, sol))
 
 
 def prob(fitness):
@@ -60,24 +61,35 @@ def forage(start_board, start_squares):
 
     iteration = 0
     solutions = []
-    random_search(start_board, SITES_TO_VISIT, solutions)
-    best_fitness, _, best_sol = heapq.nsmallest(1, solutions)[0]
+    random_search(start_board, EMPLOYED_BEES, solutions)
+    best_fitness, _, _, best_sol = heapq.nsmallest(1, solutions)[0]
 
     while iteration < MAX_ITERATIONS and best_fitness != 0:
         iteration += 1
 
-        best_solutions = heapq.nsmallest(SITES_TO_SELECT, solutions)
-        fitness_sum = sum(prob(item[0]) for item in best_solutions)
-
-        solutions = []
-        for fitness, _, sol in best_solutions:
-            onlooker_bees = int(BEES * prob(fitness) / fitness_sum)
+        new_solutions = []
+        scout_bees = SCOUT_BEES
+        factor = ONLOOKER_BEES / sum(prob(item[0]) for item in solutions)
+        for fitness, _, fertility, sol in solutions:
+            worker_bees = int(factor * prob(fitness))
             new_fitness, new_sol = search_neighborhood(sol, start_squares,
-                                                       onlooker_bees)
-            heapq.heappush(solutions, (new_fitness, counter.next(), new_sol))
-        random_search(start_board, SCOUT_BEES, solutions)
+                                                       worker_bees)
+            if new_sol == sol:
+                fertility -= 1
+                if fertility == 0:
+                    scout_bees += 1
+                else:
+                    heapq.heappush(new_solutions, (new_fitness, counter.next(),
+                                                   fertility, new_sol))
+            else:
+                heapq.heappush(new_solutions, (new_fitness, counter.next(),
+                                               FERTILITY, new_sol))
 
-        best_new_fitness, _, best_new_sol = heapq.nsmallest(1, solutions)[0]
+        random_search(start_board, scout_bees, new_solutions)
+        solutions = heapq.nsmallest(EMPLOYED_BEES, new_solutions)
+        heapq.heapify(solutions)
+
+        best_new_fitness, _, _, best_new_sol = heapq.nsmallest(1, solutions)[0]
         if best_new_fitness < best_fitness:
             print(best_new_fitness)
             best_fitness, best_sol = best_new_fitness, best_new_sol
