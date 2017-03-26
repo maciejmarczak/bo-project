@@ -1,13 +1,15 @@
+import math
 import pprint
 import random
 from copy import deepcopy
 from operator import attrgetter
 from collections import namedtuple
+from itertools import chain
 
 from sudoku import from_file, calc_fitness, fill_with_unique_blks as fill
 
 
-PATH = './puzzles/sudoku_easy.txt'
+PATH = './puzzles/sudoku.txt'
 MAX_ITERATIONS = 100000
 EMPLOYED_BEES = 100
 ONLOOKER_BEES = 200
@@ -19,50 +21,41 @@ Solution = namedtuple("Solution", ["fitness", "board"])
 
 
 def search_neighborhood(sol, solutions, start_squares):
-    fitness = calc_fitness(sol)
+    new_board = deepcopy(sol.board)
     neighbor_sol = sol
     while neighbor_sol is sol:
-        neighbor_sol = random.choice(solutions)[3]
+        neighbor_sol = random.choice(solutions)
 
-    new_sol = deepcopy(sol)
     blk = random.randint(0, 8)
-    x = (blk // 3) * 3
-    y = (blk % 3) * 3
+    x, y = (blk // 3) * 3, (blk % 3) * 3
     blk_squares = [(i, j) for i in range(x, x+3) for j in range(y, y+3)]
     taken = [idx for idx in blk_squares if idx in start_squares]
     available = [idx for idx in blk_squares if idx not in taken]
 
     a, b = random.choice(available)
-    val = sol[a][b]
-    new_val = round(val + random.random() * (val - neighbor_sol[a][b]))
+    val = sol.board[a][b]
+    new_val = math.ceil(val + random.random() * abs(val - neighbor_sol.board[a][b]))
     if new_val > 9:
-        new_val %= 9
-    elif new_val < 0:
-        new_val *= -1
-    elif new_val in (0, val):
-        return Solution(fitness, sol)
+        new_val = (new_val % 9) + 1
+    elif new_val == val:
+        return sol
 
     for i, j in blk_squares:
-        if new_sol[i][j] == new_val:
+        if new_board[i][j] == new_val:
             if (i, j) not in taken:
-                new_sol[a][b], new_sol[i][j] = new_sol[i][j], new_sol[a][b]
+                new_board[a][b], new_board[i][j] = new_board[i][j], new_board[a][b]
                 break
             else:
-                return Solution(fitness, sol)
+                return sol
 
-    new_fitness = calc_fitness(new_sol)
-    return Solution(new_fitness, new_sol) if new_fitness > fitness else Solution(fitness, sol)
+    new_sol = Solution(fitness=calc_fitness(new_board), board=new_board)
+    return new_sol if new_sol.fitness > sol.fitness else sol
 
 
 def search_neighborhoods(sol, solutions, start_squares, onlooker_bees):
-    best_sol, best_fitness = sol, calc_fitness(sol)
-    for _ in range(onlooker_bees):
-        new_fitness, new_sol = search_neighborhood(sol, solutions,
-                                                   start_squares)
-        if new_fitness > best_fitness:
-            best_sol = new_sol
-            best_fitness = new_fitness
-    return Solution(best_fitness, best_sol)
+    onlooker_solutions = (search_neighborhood(sol, solutions, start_squares)
+                          for _ in range(onlooker_bees))
+    return max(chain([sol], onlooker_solutions), key=attrgetter('fitness'))
 
 
 def random_search(start_board):
@@ -74,7 +67,7 @@ def random_search(start_board):
 def forage(start_board, start_squares):
 
     iteration = 0
-    solutions = [random_search(start_board) for _ in EMPLOYED_BEES]
+    solutions = [random_search(start_board) for _ in range(EMPLOYED_BEES)]
     best_sol = max(solutions, key=attrgetter('fitness'))
 
     while iteration < MAX_ITERATIONS and best_sol.fitness != SEARCHED_FITNESS:
