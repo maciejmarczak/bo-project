@@ -35,14 +35,13 @@ def fill_with_unique_blks(board):
     for blk in range(9):
         x = (blk // 3) * 3
         y = (blk % 3) * 3
-        digits = free_digits(board[row][col]
-                             for row in range(x, x+3)
-                             for col in range(y, y+3)
-                             if board[row][col])
+        taken_digits = [board[row][col] for row in range(x, x+3) for col in range(y, y+3) if board[row][col]]
+        digits = free_digits(taken_digits)
         for row in range(x, x+3):
             for col in range(y, y+3):
                 if not board[row][col]:
                     board[row][col] = next(digits)
+    # print(board)
 
 
 def calc_penalty(board):

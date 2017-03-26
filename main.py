@@ -9,8 +9,8 @@ from itertools import chain
 from sudoku import from_file, calc_fitness, fill_with_unique_blks as fill
 
 
-PATH = './puzzles/sudoku.txt'
-MAX_ITERATIONS = 100000
+PATH = './puzzles/sudoku_easy.txt'
+MAX_ITERATIONS = 1000
 EMPLOYED_BEES = 100
 ONLOOKER_BEES = 200
 SCOUT_BEES = EMPLOYED_BEES // 10
@@ -34,7 +34,7 @@ def search_neighborhood(sol, solutions, start_squares):
 
     a, b = random.choice(available)
     val = sol.board[a][b]
-    new_val = math.ceil(val + random.random() * abs(val - neighbor_sol.board[a][b]))
+    new_val = math.ceil(val + random.random() * random.choice([1, -1]) * abs(val - neighbor_sol.board[a][b]))
     if new_val > 9:
         new_val = (new_val % 9) + 1
     elif new_val == val:
@@ -67,7 +67,9 @@ def random_search(start_board):
 def forage(start_board, start_squares):
 
     iteration = 0
+    #initialize population
     solutions = [random_search(start_board) for _ in range(EMPLOYED_BEES)]
+    # evaluate population
     best_sol = max(solutions, key=attrgetter('fitness'))
 
     while iteration < MAX_ITERATIONS and best_sol.fitness != SEARCHED_FITNESS:
