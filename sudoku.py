@@ -14,8 +14,8 @@ def from_file(path):
 
 
 def fill_with_unique_rows(board):
-    for row in range(9):
-        digits = free_digits(digit for digit in board[row] if digit)
+    for row in board:
+        digits = free_digits(digit for digit in row if digit)
         for col in range(9):
             if not row[col]:
                 row[col] = next(digits)
@@ -45,8 +45,8 @@ def fill_with_unique_blks(board):
                     board[row][col] = next(digits)
 
 
-def calc_fitness(board):
-    fitness = 0
+def calc_penalty(board):
+    penalty = 0
     for i in range(9):
         row = board[i]
         col = (board[j][i] for j in range(9))
@@ -55,5 +55,9 @@ def calc_fitness(board):
         blk = (board[j][k] for j in range(x, x+3) for k in range(y, y+3))
 
         for it in (row, col, blk):
-            fitness += count_digits_repetition_num(it)
-    return fitness
+            penalty += count_digits_repetition_num(it)
+    return penalty
+
+
+def calc_fitness(board):
+    return 1 / (1 + calc_penalty(board))

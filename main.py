@@ -1,106 +1,115 @@
-import heapq
 import pprint
 import random
 from copy import deepcopy
+from operator import attrgetter
+from collections import namedtuple
 
 from sudoku import from_file, calc_fitness, fill_with_unique_blks as fill
-from utils import Counter
 
 
-PATH = './sudoku.txt'
+PATH = './puzzles/sudoku_easy.txt'
 MAX_ITERATIONS = 100000
-ONLOOKER_BEES = 300
 EMPLOYED_BEES = 100
-SCOUT_BEES = EMPLOYED_BEES // 5
-FERTILITY = 30
+ONLOOKER_BEES = 200
+SCOUT_BEES = EMPLOYED_BEES // 10
+SEARCHED_FITNESS = 1
 
 
-counter = Counter()
+Solution = namedtuple("Solution", ["fitness", "board"])
 
 
-def find_neighbor_solution(board, start_squares):
-    new_board = deepcopy(board)
+def search_neighborhood(sol, solutions, start_squares):
+    fitness = calc_fitness(sol)
+    neighbor_sol = sol
+    while neighbor_sol is sol:
+        neighbor_sol = random.choice(solutions)[3]
+
+    new_sol = deepcopy(sol)
     blk = random.randint(0, 8)
     x = (blk // 3) * 3
     y = (blk % 3) * 3
-    available = [(i, j)
-                 for i in range(x, x+3)
-                 for j in range(y, y+3)
-                 if (i, j) not in start_squares]
+    blk_squares = [(i, j) for i in range(x, x+3) for j in range(y, y+3)]
+    taken = [idx for idx in blk_squares if idx in start_squares]
+    available = [idx for idx in blk_squares if idx not in taken]
+
     a, b = random.choice(available)
-    available.remove((a, b))
-    c, d = random.choice(available)
-    new_board[a][b], new_board[c][d] = new_board[c][d], new_board[a][b]
-    return new_board
+    val = sol[a][b]
+    new_val = round(val + random.random() * (val - neighbor_sol[a][b]))
+    if new_val > 9:
+        new_val %= 9
+    elif new_val < 0:
+        new_val *= -1
+    elif new_val in (0, val):
+        return Solution(fitness, sol)
+
+    for i, j in blk_squares:
+        if new_sol[i][j] == new_val:
+            if (i, j) not in taken:
+                new_sol[a][b], new_sol[i][j] = new_sol[i][j], new_sol[a][b]
+                break
+            else:
+                return Solution(fitness, sol)
+
+    new_fitness = calc_fitness(new_sol)
+    return Solution(new_fitness, new_sol) if new_fitness > fitness else Solution(fitness, sol)
 
 
-def search_neighborhood(sol, start_squares, workers):
+def search_neighborhoods(sol, solutions, start_squares, onlooker_bees):
     best_sol, best_fitness = sol, calc_fitness(sol)
-    for _ in range(workers):
-        sol = find_neighbor_solution(sol, start_squares)
-        fitness = calc_fitness(sol)
-        if fitness < best_fitness:
-            best_sol = sol
-            best_fitness = fitness
-    return best_fitness, best_sol
+    for _ in range(onlooker_bees):
+        new_fitness, new_sol = search_neighborhood(sol, solutions,
+                                                   start_squares)
+        if new_fitness > best_fitness:
+            best_sol = new_sol
+            best_fitness = new_fitness
+    return Solution(best_fitness, best_sol)
 
 
-def random_search(start_board, sites_to_search, solutions):
-    for _ in range(sites_to_search):
-        sol = deepcopy(start_board)
-        fill(sol)
-        heapq.heappush(solutions, (calc_fitness(sol), counter.next(),
-                                   FERTILITY, sol))
-
-
-def prob(fitness):
-    return 1 / (1 + fitness)
+def random_search(start_board):
+    sol = deepcopy(start_board)
+    fill(sol)
+    return Solution(fitness=calc_fitness(sol), board=sol)
 
 
 def forage(start_board, start_squares):
 
     iteration = 0
-    solutions = []
-    random_search(start_board, EMPLOYED_BEES, solutions)
-    best_fitness, _, _, best_sol = heapq.nsmallest(1, solutions)[0]
+    solutions = [random_search(start_board) for _ in EMPLOYED_BEES]
+    best_sol = max(solutions, key=attrgetter('fitness'))
 
-    while iteration < MAX_ITERATIONS and best_fitness != 0:
+    while iteration < MAX_ITERATIONS and best_sol.fitness != SEARCHED_FITNESS:
         iteration += 1
+        # every employed bee search its neighborhood
+        solutions = [search_neighborhood(sol, solutions, start_squares)
+                     for sol in solutions]
 
-        new_solutions = []
-        scout_bees = SCOUT_BEES
-        factor = ONLOOKER_BEES / sum(prob(item[0]) for item in solutions)
-        for fitness, _, fertility, sol in solutions:
-            worker_bees = int(factor * prob(fitness))
-            new_fitness, new_sol = search_neighborhood(sol, start_squares,
-                                                       worker_bees)
-            if new_sol == sol:
-                fertility -= 1
-                if fertility == 0:
-                    scout_bees += 1
-                else:
-                    heapq.heappush(new_solutions, (new_fitness, counter.next(),
-                                                   fertility, new_sol))
-            else:
-                heapq.heappush(new_solutions, (new_fitness, counter.next(),
-                                               FERTILITY, new_sol))
+        # every employed bee with onlooker bess search given neighborhood
+        factor = ONLOOKER_BEES / sum(sol.fitness for sol in solutions)
+        solutions = [search_neighborhoods(sol, solutions, start_squares,
+                                          int(factor * sol.fitness))
+                     for sol in solutions]
 
-        random_search(start_board, scout_bees, new_solutions)
-        solutions = heapq.nsmallest(EMPLOYED_BEES, new_solutions)
-        heapq.heapify(solutions)
+        # replace abandoned solutions if any
+        solutions.sort(key=attrgetter('fitness'))
+        for i in range(SCOUT_BEES):
+            sol = solutions[i]
+            new_sol = random_search(start_board)
+            if new_sol.fitness > sol.fitness:
+                solutions[i] = new_sol
 
-        best_new_fitness, _, _, best_new_sol = heapq.nsmallest(1, solutions)[0]
-        if best_new_fitness < best_fitness:
-            print(best_new_fitness)
-            best_fitness, best_sol = best_new_fitness, best_new_sol
+        best_new_sol = max(solutions, key=attrgetter('fitness'))
+        if best_new_sol.fitness > best_sol.fitness:
+            print(best_new_sol.fitness)
+            best_sol = best_new_sol
 
-    return best_fitness, best_sol
+    return best_sol
 
 
 def main():
-    final_fitness, final_result = forage(*from_file(PATH))
-    print('Fitness: ', final_fitness)
-    pprint.pprint(final_result)
+    start_board, start_squares = from_file(PATH)
+    final_result = forage(start_board, start_squares)
+    print('Fitness: ', final_result.fitness)
+    pprint.pprint(final_result.board)
 
 
 if __name__ == "__main__":
