@@ -1,13 +1,12 @@
 import math
 import pprint
 import random
-from copy import deepcopy
-from operator import attrgetter
 from collections import namedtuple
+from copy import deepcopy
 from itertools import chain
+from operator import attrgetter
 
-from sudoku import from_file, calc_fitness, fill_with_unique_blks as fill
-
+from core.sudoku import from_file, calc_fitness, fill_with_unique_blks as fill
 
 PATH = './puzzles/sudoku_easy.txt'
 MAX_ITERATIONS = 1000
