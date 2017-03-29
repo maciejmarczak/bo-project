@@ -6,10 +6,10 @@ from core.sudoku_utils import from_file
 
 
 LOG_FILE = './perf.log'
-BOARDS = ('./puzzles/sudoku_easy.txt',
-          './puzzles/sudoku_medium.txt',
-          './puzzles/sudoku_hard.txt',
-          './puzzles/sudoku.txt')
+BOARDS = ('./examples/sudoku_easy.txt',
+          './examples/sudoku_medium.txt',
+          './examples/sudoku_hard.txt',
+          './examples/sudoku.txt')
 
 TRIES_NUM = 50
 ITERATIONS = (10, 50, 100, 200, 300, 500, 1000, 10000)

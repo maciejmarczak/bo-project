@@ -1,3 +1,4 @@
+import sys
 import math
 import random
 from collections import namedtuple
@@ -5,7 +6,7 @@ from copy import deepcopy
 from itertools import chain
 from operator import attrgetter
 
-from .sudoku_utils import calc_fitness, fill_with_unique_blks as fill
+from core.sudoku_utils import calc_fitness, fill_with_unique_blks as fill
 
 
 Solution = namedtuple("Solution", ["fitness", "board"])
@@ -88,8 +89,31 @@ def forage(start_board, start_squares, max_iterations=1000, employed_bees=30,
         best_new_sol = max(solutions, key=attrgetter('fitness'))
         if best_new_sol.fitness > best_sol.fitness:
             best_sol = best_new_sol
+            if sys.flags.debug:
+                print(best_sol.fitness)
 
         if iteration % yield_after == 0:
             yield best_sol, iteration
 
     return best_sol, iteration
+
+
+def main():
+    from core.sudoku_utils import from_file
+    from pprint import pprint
+
+    eb, ob, sb, it_num = 30, 60, 3, 1000
+    start_board, start_squares = from_file('../examples/sudoku_easy.txt')
+    gen = forage(start_board, start_squares, max_iterations=it_num,
+                 employed_bees=eb, onlooker_bees=ob,
+                 scout_bees=sb, yield_after=it_num + 1)
+    try:
+        next(gen)
+    except StopIteration as ex:
+        sol, iteration = ex.value
+        print('Iteration: ', iteration, '\nFitness: ', sol.fitness)
+        pprint(sol.board)
+
+
+if __name__ == "__main__":
+    main()
