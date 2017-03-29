@@ -92,8 +92,9 @@ def forage(start_board, start_squares, max_iterations=1000, employed_bees=30,
             if sys.flags.debug:
                 print(best_sol.fitness)
 
-        if iteration % yield_after == 0:
-            yield best_sol, iteration
+        #if iteration % yield_after == 0:
+            #pprint(iteration)
+            #yield best_sol, iteration
 
     return best_sol, iteration
 
