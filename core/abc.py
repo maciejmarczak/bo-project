@@ -1,22 +1,15 @@
 import math
-import pprint
 import random
 from collections import namedtuple
 from copy import deepcopy
 from itertools import chain
 from operator import attrgetter
 
-from core.sudoku import from_file, calc_fitness, fill_with_unique_blks as fill
-
-PATH = './puzzles/sudoku_easy.txt'
-MAX_ITERATIONS = 1000
-EMPLOYED_BEES = 100
-ONLOOKER_BEES = 200
-SCOUT_BEES = EMPLOYED_BEES // 10
-SEARCHED_FITNESS = 1
+from .sudoku_utils import calc_fitness, fill_with_unique_blks as fill
 
 
 Solution = namedtuple("Solution", ["fitness", "board"])
+SEARCHED_FITNESS = 1
 
 
 def search_neighborhood(sol, solutions, start_squares):
@@ -33,7 +26,7 @@ def search_neighborhood(sol, solutions, start_squares):
 
     a, b = random.choice(available)
     val = sol.board[a][b]
-    new_val = math.ceil(val + random.random() * random.choice([1, -1]) * abs(val - neighbor_sol.board[a][b]))
+    new_val = math.ceil(val + random.uniform(-1, 1) * abs(val - neighbor_sol.board[a][b]))
     if new_val > 9:
         new_val = (new_val % 9) + 1
     elif new_val == val:
@@ -63,29 +56,30 @@ def random_search(start_board):
     return Solution(fitness=calc_fitness(sol), board=sol)
 
 
-def forage(start_board, start_squares):
+def forage(start_board, start_squares, max_iterations=1000, employed_bees=30,
+           onlooker_bees=60, scout_bees=3, yield_after=20):
 
     iteration = 0
-    #initialize population
-    solutions = [random_search(start_board) for _ in range(EMPLOYED_BEES)]
+    # initialize population
+    solutions = [random_search(start_board) for _ in range(employed_bees)]
     # evaluate population
     best_sol = max(solutions, key=attrgetter('fitness'))
 
-    while iteration < MAX_ITERATIONS and best_sol.fitness != SEARCHED_FITNESS:
+    while iteration < max_iterations and best_sol.fitness != SEARCHED_FITNESS:
         iteration += 1
         # every employed bee search its neighborhood
         solutions = [search_neighborhood(sol, solutions, start_squares)
                      for sol in solutions]
 
         # every employed bee with onlooker bess search given neighborhood
-        factor = ONLOOKER_BEES / sum(sol.fitness for sol in solutions)
+        factor = onlooker_bees / sum(sol.fitness for sol in solutions)
         solutions = [search_neighborhoods(sol, solutions, start_squares,
                                           int(factor * sol.fitness))
                      for sol in solutions]
 
         # replace abandoned solutions if any
         solutions.sort(key=attrgetter('fitness'))
-        for i in range(SCOUT_BEES):
+        for i in range(scout_bees):
             sol = solutions[i]
             new_sol = random_search(start_board)
             if new_sol.fitness > sol.fitness:
@@ -93,18 +87,9 @@ def forage(start_board, start_squares):
 
         best_new_sol = max(solutions, key=attrgetter('fitness'))
         if best_new_sol.fitness > best_sol.fitness:
-            print(best_new_sol.fitness)
             best_sol = best_new_sol
 
-    return best_sol
+        if iteration % yield_after == 0:
+            yield best_sol, iteration
 
-
-def main():
-    start_board, start_squares = from_file(PATH)
-    final_result = forage(start_board, start_squares)
-    print('Fitness: ', final_result.fitness)
-    pprint.pprint(final_result.board)
-
-
-if __name__ == "__main__":
-    main()
+    return best_sol, iteration

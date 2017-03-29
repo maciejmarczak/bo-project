@@ -1,4 +1,4 @@
-from core.utils import free_digits, count_digits_repetition_num
+import random
 
 
 def from_file(path):
@@ -13,35 +13,33 @@ def from_file(path):
     return start_board, start_squares
 
 
-def fill_with_unique_rows(board):
-    for row in board:
-        digits = free_digits(digit for digit in row if digit)
-        for col in range(9):
-            if not row[col]:
-                row[col] = next(digits)
-
-
-def fill_with_unique_cols(board):
-    for col in range(9):
-        digits = free_digits(board[row][col]
-                             for row in range(9)
-                             if board[row][col])
-        for row in range(9):
-            if not board[row][col]:
-                board[row][col] = next(digits)
+def free_digits(taken_digits):
+    leftover_digits = [digit for digit in range(1, 10)
+                       if digit not in taken_digits]
+    random.shuffle(leftover_digits)
+    yield from leftover_digits
 
 
 def fill_with_unique_blks(board):
     for blk in range(9):
         x = (blk // 3) * 3
         y = (blk % 3) * 3
-        taken_digits = [board[row][col] for row in range(x, x+3) for col in range(y, y+3) if board[row][col]]
+        taken_digits = [board[row][col]
+                        for row in range(x, x+3)
+                        for col in range(y, y+3)
+                        if board[row][col]]
         digits = free_digits(taken_digits)
         for row in range(x, x+3):
             for col in range(y, y+3):
                 if not board[row][col]:
                     board[row][col] = next(digits)
-    # print(board)
+
+
+def count_digits_repetition_num(it):
+    digits = [-1] * 10
+    for digit in it:
+        digits[digit] += 1
+    return sum(digit_num for digit_num in digits if digit_num > 0)
 
 
 def calc_penalty(board):
@@ -49,11 +47,7 @@ def calc_penalty(board):
     for i in range(9):
         row = board[i]
         col = (board[j][i] for j in range(9))
-
-        x, y = (i // 3) * 3, (i % 3) * 3
-        blk = (board[j][k] for j in range(x, x+3) for k in range(y, y+3))
-
-        for it in (row, col, blk):
+        for it in (row, col):
             penalty += count_digits_repetition_num(it)
     return penalty
 
