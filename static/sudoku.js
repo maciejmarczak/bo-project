@@ -12,7 +12,7 @@ var sudoku = (function ($) {
       table[i] = [];
 
       for (j = 0; j < 9; j++) {
-        var $cell = $('<td></td>');
+        var $cell = $('<td contenteditable="true"></td>');
 
         table[i][j] = $cell;
         $row.append($cell);
@@ -20,6 +20,12 @@ var sudoku = (function ($) {
 
       $grid.append($row);
     }
+
+    $('td[contenteditable="true"]').on('input', function () {
+      var el = $(this);
+      el.html(el.html().charAt(0));
+    });
+
   })();
 
   function fillGrid(data) {
@@ -35,13 +41,28 @@ var sudoku = (function ($) {
         $cell = table[i][j];
 
         $cell.html(data.state[i][j]);
-        $cell.addClass(data.meta[i][j]);
+        // $cell.addClass(data.meta[i][j]);
       }
     }
   }
 
+  function getValues() {
+    var values = [];
+
+    var i, j;
+    for (i = 0; i < 9; i++) {
+      values[i] = [];
+      for (j = 0; j < 9; j++) {
+        values[i][j] = parseInt(table[i][j].html());
+      }
+    }
+
+    return values;
+  }
+
   return {
-    fillGrid: fillGrid
+    fillGrid: fillGrid,
+    getValues: getValues
   }
 
 })(jQuery);
