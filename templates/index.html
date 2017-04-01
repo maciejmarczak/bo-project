@@ -9,13 +9,55 @@
   <body>
     <div class="container">
       <h1>Sudoku Solver</h1>
-      <table id="sudoku">
-      </table>
+      <div class="row">
+
+        <div class="col-md-6">
+          <table id="sudoku"></table>
+        </div>
+
+        <div class="col-md-6">
+
+            {% block content %}
+
+          <form class="form-inline" id="sudoku-form" method="POST" action="/">
+               {{ form.hidden_tag() }}
+
+            <div class="row">
+              <div class="form-group col-xs-6">
+                <!--suppress XmlInvalidId -->
+                  <label for="iterationsLimit">Iterations Limit:</label>
+                   {{ form.iterations_limit(class_="form-control", id_="iterationsLimit", name_="iterationsLimit") }}<br>
+                  {% for error in form.iterations_limit.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                  {% endfor %}<br>
+              </div>
+              <div class="form-group col-xs-6">
+                <label for="employedBees">Employed Bees:</label>
+                <input type="text" class="form-control" id="employedBees" name="employedBees">
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="form-group col-xs-6">
+                <label for="onlookerBees">Onlooker Bees:</label>
+                <input type="text" class="form-control" id="onlookerBees" name="onlookerBees">
+              </div>
+              <div class="form-group col-xs-6">
+                <label for="scoutBees">Scout Bees:</label>
+                <input type="text" class="form-control" id="scoutBees" name="scoutBees">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary pull-right">Execute</button>
+
+          </form>
+            {% endblock %}
+        </div>
+      </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="/static/sudoku.js"></script>
-
-    <!-- demo script -->
     <script src="/static/demo.js"></script>
+    <!--<script src="/static/dataHandler.js"></script>-->
   </body>
 </html>
