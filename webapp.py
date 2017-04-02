@@ -13,6 +13,7 @@ def home_page():
 @app.route('/sudoku')
 def sudoku():
     args = request.args
+    print(args.get('grid'))
 
     # parse uploaded grid
     grid = json.loads(args.get('grid'))
@@ -23,14 +24,8 @@ def sudoku():
     ob = int(args.get('onlookerBees'))
     sb = int(args.get('scoutBees'))
 
-    from core.abc import forage
-    gen = forage(grid, grid, max_iterations=it,
-                 employed_bees=eb, onlooker_bees=ob,
-                 scout_bees=sb, yield_after=20)
-
-    pprint(gen)
-
-    return json.dumps(gen)
+    return app.response_class(generate(grid, grid, it, eb, ob, sb),
+                              mimetype="text/plain")
 
 
 @app.errorhandler(404)
@@ -38,3 +33,23 @@ def sudoku():
 def page_not_found(error):
     return redirect(url_for('home_page'), 302)
 
+
+def generate(board, squares, it_num, eb, ob, sb):
+    from core.abc import forage
+    from time import perf_counter
+
+    gen = forage(board, squares, max_iterations=it_num,
+                 employed_bees=eb, onlooker_bees=ob,
+                 scout_bees=sb, yield_after=100)
+
+    start = perf_counter()
+    run = True
+    while run:
+        try:
+            sol, iteration = next(gen)
+        except StopIteration as ex:
+            sol, iteration = ex.value
+            run = False
+        finally:
+            end = perf_counter()
+            yield json.dumps((sol, iteration, end - start)) + '\n'

@@ -60,6 +60,10 @@ var sudoku = (function ($) {
     return values;
   }
 
+  function validate() {
+
+  }
+
   return {
     fillGrid: fillGrid,
     getValues: getValues
