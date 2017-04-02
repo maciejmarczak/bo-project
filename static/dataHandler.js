@@ -9,6 +9,8 @@
         $form.hide();
         $chart.show();
 
+        sudoku.markUserInput();
+
         var data = $(this).find('input')
             .serializeArray();
 

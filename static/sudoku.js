@@ -60,13 +60,21 @@ var sudoku = (function ($) {
     return values;
   }
 
-  function validate() {
-
+  function markUserInput() {
+    var i, j;
+    for (i = 0; i < 9; i++) {
+      for (j = 0; j < 9; j++) {
+        if (parseInt(table[i][j].html())) {
+          table[i][j].addClass('fxd');
+        }
+      }
+    }
   }
 
   return {
     fillGrid: fillGrid,
-    getValues: getValues
+    getValues: getValues,
+    markUserInput: markUserInput
   }
 
 })(jQuery);
