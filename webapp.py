@@ -1,5 +1,4 @@
 from flask import Flask, render_template, redirect, url_for, request
-from pprint import pprint
 import json
 
 app = Flask(__name__)
@@ -17,6 +16,7 @@ def sudoku():
 
     # parse uploaded grid
     grid = json.loads(args.get('grid'))
+    start_squares = {(i, j) for i in range(9) for j in range(9) if grid[i][j]}
 
     # fetch request params
     it = int(args.get('iterationsLimit'))
@@ -24,7 +24,7 @@ def sudoku():
     ob = int(args.get('onlookerBees'))
     sb = int(args.get('scoutBees'))
 
-    return app.response_class(generate(grid, grid, it, eb, ob, sb),
+    return app.response_class(generate(grid, start_squares, it, eb, ob, sb),
                               mimetype="text/plain")
 
 
@@ -53,3 +53,7 @@ def generate(board, squares, it_num, eb, ob, sb):
         finally:
             end = perf_counter()
             yield json.dumps((sol, iteration, end - start)) + '\n'
+
+
+if __name__ == "__main__":
+    app.run()
