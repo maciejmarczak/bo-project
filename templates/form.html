@@ -1,0 +1,43 @@
+<form class="form-inline" id="sudoku-form" method="POST" action="/">
+    {{ form.hidden_tag() }}
+
+    <div class="row">
+        <div class="form-group col-xs-6">
+            <!--suppress XmlInvalidId -->
+            <label for="iterationsLimit">Iterations Limit:</label>
+            {{ form.iterations_limit(class_="form-control", id_="iterationsLimit", name_="iterationsLimit") }}<br>
+            {% for error in form.iterations_limit.errors %}
+                <span class="form-error">[{{ error }}]</span>
+            {% endfor %}<br>
+        </div>
+        <div class="form-group col-xs-6">
+            <!--suppress XmlInvalidId -->
+            <label for="employedBees">Employed Bees:</label>
+             {{ form.employeed_bees(class_="form-control", id_="employedBees", name_="employedBees") }}<br>
+            {% for error in form.employeed_bees.errors %}
+                <span class="form-error">[{{ error }}]</span>
+            {% endfor %}<br>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-xs-6">
+            <!--suppress XmlInvalidId -->
+            <label for="onlookerBees">Onlooker Bees:</label>
+             {{ form.onlooker_bees(class_="form-control", id_="onlookerBees", name_="onlookerBees") }}<br>
+            {% for error in form.onlooker_bees.errors %}
+                <span class="form-error">[{{ error }}]</span>
+            {% endfor %}<br>
+        </div>
+        <div class="form-group col-xs-6">
+             <!--suppress XmlInvalidId -->
+            <label for="scoutBees">Scout Bees:</label>
+             {{ form.scout_bees(class_="form-control", id_="scoutBees", name_="scoutBees") }}<br>
+            {% for error in form.scout_bees.errors %}
+                <span class="form-error">[{{ error }}]</span>
+            {% endfor %}<br>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary pull-right">Execute</button>
+</form>

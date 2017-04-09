@@ -53,3 +53,8 @@ td.err {
   background-color: #FF1E1E;
   color: white;
 }
+
+/* form */
+.form-error {
+  color: red;
+}

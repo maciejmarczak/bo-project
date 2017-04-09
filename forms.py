@@ -1,7 +1,17 @@
 from flask_wtf import Form
-from wtforms import StringField
-from wtforms.validators import DataRequired
+from wtforms import IntegerField
+from wtforms.validators import DataRequired, NumberRange
 
 
 class AlgorithmForm(Form):
-    iterations_limit = StringField('iterations_limit', validators=[DataRequired()])
+
+    PROPER_NUMBER_ALERT = "This field should contain a number"
+
+    iterations_limit = IntegerField('iterations_limit', validators=[DataRequired(message=PROPER_NUMBER_ALERT),
+                                                                   NumberRange(1, 1000000)])
+    employeed_bees = IntegerField('employeed_bees', validators=[DataRequired(message=PROPER_NUMBER_ALERT),
+                                                               NumberRange(1)])
+    onlooker_bees = IntegerField('onlooker_bees', validators=[DataRequired(message=PROPER_NUMBER_ALERT),
+                                                             NumberRange(1)])
+    scout_bees = IntegerField('scout_bees', validators=[DataRequired(message=PROPER_NUMBER_ALERT),
+                                                       NumberRange(1)])

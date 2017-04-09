@@ -1,3 +1,5 @@
+from flask import jsonify
+
 from flask import Flask, render_template, redirect, url_for, request
 from pprint import pprint
 import json
@@ -5,20 +7,27 @@ from forms import AlgorithmForm
 
 app = Flask(__name__)
 
+
 @app.route('/', methods=('GET', 'POST'))
 def home_page():
     form = AlgorithmForm(secret_key='myverylongsecretkey')
-    if form.validate_on_submit():
+    if request.method == "GET":
+        return render_template('index.html', form=form)
+    elif request.method == "POST":
+        if form.validate_on_submit():
+            # default values for algorithm
+            args = json.dumps({"iterationsLimit":form.iterations_limit,
+                               "employedBees":form.employeed_bees,
+                               "onlookerBees":form.onlooker_bees,
+                               "scoutBees":form.scout_bees,
+                               "grid":request.form['grid']})
 
-        # default values for algorithm
-        args = json.dumps({"iterationsLimit":1000,
-                           "employedBees":30,
-                           "onlookerBees":60,
-                           "scoutBees":3})
+            print("Form is okay")
+            # If form is valid, redirect to '/sudoku' endpoint and return result of the algorithm.
+            return redirect(url_for('sudoku', args=args))
+        # If form is invalid, render form template with errors visible.
+        return render_template('form.html', form=form)
 
-        print("Form is okay")
-        return redirect(url_for('/sudoku', args=args))
-    return render_template('index.html', form=form)
 
 @app.route('/sudoku')
 def sudoku():
@@ -30,8 +39,13 @@ def sudoku():
     ob = int(args.get('onlookerBees'))
     sb = int(args.get('scoutBees'))
 
+    print("ARGS")
+    print(args)
+
     # parse uploaded grid
     grid = json.loads(args.get('grid'))
+
+    print("Hello, I am here!")
 
     from core.abc import forage
     gen = forage(grid, grid, max_iterations=it,
@@ -39,7 +53,7 @@ def sudoku():
                  scout_bees=sb, yield_after=20)
 
     pprint(gen)
-    return json.dumps(gen)
+    return jsonify(json.dumps(gen))
 
 
 @app.errorhandler(404)
