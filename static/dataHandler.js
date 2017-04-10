@@ -45,6 +45,8 @@
             if (xhr.readyState == XMLHttpRequest.DONE) {
                 clearInterval(timer);
                 sudoku.fillGrid({ state: result[0][1] }, true);
+                $('#res').html('Finished in ' + result[1] + ' iterations. ' +
+                    'It took ' + result[2].toFixed(2) + ' seconds.');
             }
         }, 500);
     });
