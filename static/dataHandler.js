@@ -44,7 +44,7 @@
             handleNewResponse();
             if (xhr.readyState == XMLHttpRequest.DONE) {
                 clearInterval(timer);
-                sudoku.fillGrid({ state: result[0][1] })
+                sudoku.fillGrid({ state: result[0][1] }, true);
             }
         }, 500);
     });
