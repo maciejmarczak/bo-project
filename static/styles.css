@@ -7,11 +7,11 @@ html, body {
 }
 
 h1 {
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 table {
-  margin: 0 auto;
+  margin: 30px auto;
   border: 2px solid black;
   box-shadow: 0 0 3px #D1D1D1;
   font-size: 20px;
@@ -29,6 +29,18 @@ td:nth-child(3n) {
 
 tr:nth-child(3n) {
   border-bottom: 2px solid black;
+}
+
+.form-inline .row {
+  margin-bottom: 15px;
+}
+
+.form-inline label {
+  display: block;
+}
+
+.form-inline input {
+  min-width: 100%;
 }
 
 /* fixed */
