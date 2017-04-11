@@ -24,14 +24,20 @@ def home_page():
 
             print("Form is okay")
             # If form is valid, redirect to '/sudoku' endpoint and return result of the algorithm.
-            return redirect(url_for('sudoku', args=args))
+            # todo: return sth
+            #return redirect(url_for('sudoku', args=args))
         # If form is invalid, render form template with errors visible.
         return render_template('form.html', form=form)
 
 
 @app.route('/sudoku')
 def sudoku():
-    args = json.loads(request.args['args'])
+    args = request.args
+    print(args.get('grid'))
+
+    # parse uploaded grid
+    grid = json.loads(args.get('grid'))
+    start_squares = {(i, j) for i in range(9) for j in range(9) if grid[i][j]}
 
     # fetch request params
     it = int(args.get('iterationsLimit'))
@@ -39,27 +45,36 @@ def sudoku():
     ob = int(args.get('onlookerBees'))
     sb = int(args.get('scoutBees'))
 
-    print("ARGS")
-    print(args)
-
-    # parse uploaded grid
-    grid = json.loads(args.get('grid'))
-
-    print("Hello, I am here!")
-
-    from core.abc import forage
-    gen = forage(grid, grid, max_iterations=it,
-                 employed_bees=eb, onlooker_bees=ob,
-                 scout_bees=sb, yield_after=20)
-
-    pprint(gen)
-    return jsonify(json.dumps(gen))
+    return app.response_class(generate(grid, start_squares, it, eb, ob, sb),
+                              mimetype="text/plain")
 
 
 @app.errorhandler(404)
 @app.errorhandler(500)
 def page_not_found(error):
     return redirect(url_for('home_page'), 302)
+
+
+def generate(board, squares, it_num, eb, ob, sb):
+    from core.abc import forage
+    from time import perf_counter
+
+    gen = forage(board, squares, max_iterations=it_num,
+                 employed_bees=eb, onlooker_bees=ob,
+                 scout_bees=sb, yield_after=100)
+
+    start = perf_counter()
+    run = True
+    while run:
+        try:
+            sol, iteration = next(gen)
+        except StopIteration as ex:
+            sol, iteration = ex.value
+            run = False
+        finally:
+            end = perf_counter()
+            yield json.dumps((sol, iteration, end - start)) + '\n'
+
 
 if __name__ == "__main__":
     app.secret_key = 'super secret key'
