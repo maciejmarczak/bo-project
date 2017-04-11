@@ -1,7 +1,6 @@
 from flask import jsonify
 
 from flask import Flask, render_template, redirect, url_for, request
-from pprint import pprint
 import json
 from forms import AlgorithmForm
 
@@ -15,17 +14,8 @@ def home_page():
         return render_template('index.html', form=form)
     elif request.method == "POST":
         if form.validate_on_submit():
-            # default values for algorithm
-            args = json.dumps({"iterationsLimit":form.iterations_limit,
-                               "employedBees":form.employeed_bees,
-                               "onlookerBees":form.onlooker_bees,
-                               "scoutBees":form.scout_bees,
-                               "grid":request.form['grid']})
-
-            print("Form is okay")
-            # If form is valid, redirect to '/sudoku' endpoint and return result of the algorithm.
-            # todo: return sth
-            #return redirect(url_for('sudoku', args=args))
+            print("Form is valid")
+            return jsonify(json.dumps({'success':True}), 200, {'ContentType':'application/json'})
         # If form is invalid, render form template with errors visible.
         return render_template('form.html', form=form)
 
@@ -40,10 +30,10 @@ def sudoku():
     start_squares = {(i, j) for i in range(9) for j in range(9) if grid[i][j]}
 
     # fetch request params
-    it = int(args.get('iterationsLimit'))
-    eb = int(args.get('employedBees'))
-    ob = int(args.get('onlookerBees'))
-    sb = int(args.get('scoutBees'))
+    it = int(args.get('iterations_limit'))
+    eb = int(args.get('employeed_bees'))
+    ob = int(args.get('onlooker_bees'))
+    sb = int(args.get('scout_bees'))
 
     return app.response_class(generate(grid, start_squares, it, eb, ob, sb),
                               mimetype="text/plain")

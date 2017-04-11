@@ -7,18 +7,16 @@
         event.preventDefault();
 
         $('.form-error').hide();
-        var data = $(this).find('input')
-            .serializeArray();
 
+        var data = $(this).find('input').serializeArray();
         data.push({
             name: 'grid',
             value: JSON.stringify(sudoku.getValues())
         });
 
-        $.post('/', data, function(data, status, xhr) {
+        $.post('/', data, function(responseData, status, xhr) {
             var contentType = xhr.getResponseHeader("content-type") || "";
-
-            if(sth) {
+            if(contentType.indexOf('json') > -1) {
                 $form.hide();
                 $chart.show();
                 sudoku.markUserInput();
@@ -53,16 +51,9 @@
                             'It took ' + result[2].toFixed(2) + ' seconds.');
                     }
                 }, 500);
-
-//            if(contentType.indexOf('json') > -1) {
-//                If it is a JSON-type response, it is a result of the algorithm.
-//                var parsed = JSON.parse(data);
-//                sudoku.fillGrid({
-//                    state: parsed[0][1]
-//                });
             } else if(contentType.indexOf('html') > -1) {
                 // If it is a HTML-type response, it is a form template rendered with errors visible.
-                $form.empty().html(data);
+                $form.empty().html(responseData);
             }
         });
         
