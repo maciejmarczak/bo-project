@@ -1,12 +1,23 @@
+from flask import jsonify
+
 from flask import Flask, render_template, redirect, url_for, request
 import json
+from forms import AlgorithmForm
 
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route('/', methods=('GET', 'POST'))
 def home_page():
-    return render_template('index.html')
+    form = AlgorithmForm(secret_key='myverylongsecretkey')
+    if request.method == "GET":
+        return render_template('index.html', form=form)
+    elif request.method == "POST":
+        if form.validate_on_submit():
+            print("Form is valid")
+            return jsonify(json.dumps({'success':True}), 200, {'ContentType':'application/json'})
+        # If form is invalid, render form template with errors visible.
+        return render_template('form.html', form=form)
 
 
 @app.route('/sudoku')
@@ -19,10 +30,10 @@ def sudoku():
     start_squares = {(i, j) for i in range(9) for j in range(9) if grid[i][j]}
 
     # fetch request params
-    it = int(args.get('iterationsLimit'))
-    eb = int(args.get('employedBees'))
-    ob = int(args.get('onlookerBees'))
-    sb = int(args.get('scoutBees'))
+    it = int(args.get('iterations_limit'))
+    eb = int(args.get('employeed_bees'))
+    ob = int(args.get('onlooker_bees'))
+    sb = int(args.get('scout_bees'))
 
     return app.response_class(generate(grid, start_squares, it, eb, ob, sb),
                               mimetype="text/plain")
@@ -56,4 +67,5 @@ def generate(board, squares, it_num, eb, ob, sb):
 
 
 if __name__ == "__main__":
+    app.secret_key = 'super secret key'
     app.run()

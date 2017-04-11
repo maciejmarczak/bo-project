@@ -17,35 +17,8 @@
         </div>
 
         <div class="col-md-6">
-          <form class="form-inline" id="sudoku-form">
-
-            <div class="row">
-              <div class="form-group col-xs-6">
-                <label for="iterationsLimit">Iterations Limit:</label>
-                <input type="text" class="form-control" id="iterationsLimit" name="iterationsLimit">
-              </div>
-              <div class="form-group col-xs-6">
-                <label for="employedBees">Employed Bees:</label>
-                <input type="text" class="form-control" id="employedBees" name="employedBees">
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="form-group col-xs-6">
-                <label for="onlookerBees">Onlooker Bees:</label>
-                <input type="text" class="form-control" id="onlookerBees" name="onlookerBees">
-              </div>
-              <div class="form-group col-xs-6">
-                <label for="scoutBees">Scout Bees:</label>
-                <input type="text" class="form-control" id="scoutBees" name="scoutBees">
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary pull-right">Execute</button>
-
-          </form>
-
-          <canvas id="chart" width="100%" height="100%" style="display: none"></canvas>
+            {% include 'form.html' %}
+            <canvas id="chart" width="100%" height="100%" style="display: none"></canvas>
         </div>
       </div>
     </div>
